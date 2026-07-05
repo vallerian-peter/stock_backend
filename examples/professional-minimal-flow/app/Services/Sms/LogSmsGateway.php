@@ -1,0 +1,16 @@
+<?php
+
+namespace App\Services\Sms;
+
+use Illuminate\Support\Facades\Log;
+
+class LogSmsGateway implements SmsGateway
+{
+    public function send(string $phone, string $message): void
+    {
+        Log::info('SMS dispatched', [
+            'phone' => $phone,
+            'message' => $message,
+        ]);
+    }
+}
