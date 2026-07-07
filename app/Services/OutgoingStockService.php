@@ -48,7 +48,7 @@ class OutgoingStockService
                 $status = PartStatus::IN_STOCK;
                 if ($newQty <= 0) {
                     $status = PartStatus::OUT_OF_STOCK;
-                } elseif ($newQty <= 10) {
+                } elseif ($newQty <= 15) {
                     $status = PartStatus::LOW_STOCK;
                 }
 
@@ -120,7 +120,7 @@ class OutgoingStockService
                     $status = PartStatus::IN_STOCK;
                     if ($newQty <= 0) {
                         $status = PartStatus::OUT_OF_STOCK;
-                    } elseif ($newQty <= 10) {
+                    } elseif ($newQty <= 15) {
                         $status = PartStatus::LOW_STOCK;
                     }
 
