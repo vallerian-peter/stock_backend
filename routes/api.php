@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\PartController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\IncomingStockController;
+use App\Http\Controllers\Api\V1\OutgoingStockController;
+use App\Http\Controllers\Api\V1\SaleController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -34,5 +37,14 @@ Route::group(['prefix' => 'v1'], function () {
         Route::post('/parts', [PartController::class, 'store'])->name('parts.store');
         Route::patch('/parts/{part}', [PartController::class, 'update'])->name('parts.update');
         Route::delete('/parts/{part}', [PartController::class, 'destroy'])->name('parts.destroy');
+
+        // incoming stock
+        Route::apiResource('incoming-stocks', IncomingStockController::class)->only(['index', 'store', 'destroy']);
+
+        // outgoing stock
+        Route::apiResource('outgoing-stocks', OutgoingStockController::class)->only(['index', 'store', 'destroy']);
+
+        // sales
+        Route::apiResource('sales', SaleController::class)->only(['index', 'store', 'destroy']);
     });
 });
