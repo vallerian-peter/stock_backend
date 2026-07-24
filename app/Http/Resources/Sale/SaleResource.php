@@ -23,6 +23,7 @@ class SaleResource extends JsonResource
             'notes' => $this->notes,
             'createdAt' => $this->created_at?->toIso8601String(),
             'outgoingStockId' => $this->outgoingStockId,
+            'receivableId' => $this->receivable?->id,
             'items' => $this->items->map(function ($item) {
                 return [
                     'id' => $item->id,

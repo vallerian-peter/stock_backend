@@ -11,13 +11,18 @@ use App\Models\Part;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OutgoingStockService
 {
+    public function __construct(private readonly ReceivableService $receivableService)
+    {
+    }
+
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return OutgoingStock::query()
-            ->with(['user', 'items.part', 'sale'])
+            ->with(['user', 'items.part', 'sale.receivable'])
             ->latest()
             ->paginate($perPage);
     }
@@ -27,8 +32,8 @@ class OutgoingStockService
         return DB::transaction(function () use ($data, $user) {
             $outgoingStock = OutgoingStock::query()->create([
                 'dispatchNumber' => $data['dispatchNumber'] ?? null,
-                'recipientName' => $data['recipientName'] ?? null,
-                'purpose' => strtoupper($data['purpose']), // 'SALE', 'TECHNICIAN', 'DAMAGED', 'RETURN', 'TRANSFER'
+                'recipientName' => null,
+                'purpose' => strtoupper($data['purpose']), // 'SALE', 'DAMAGED', 'RETURN'
                 'dispatchedBy' => $user->id,
                 'dispatchedAt' => $data['dispatchedAt'] ?? now(),
                 'notes' => $data['notes'] ?? null,
@@ -78,12 +83,24 @@ class OutgoingStockService
                     ];
                 }
 
-                $paymentStatus = strtoupper($data['paymentStatus'] ?? 'PAID');
-                $amountPaid = $paymentStatus === 'PAID' ? $totalAmount : ($data['amountPaid'] ?? 0);
+                $additionalAmount = $data['additionalAmount'] ?? 0;
+                $totalAmount += $additionalAmount;
+                $isDebt = (bool) ($data['isDebt'] ?? false);
+                $amountPaid = $isDebt
+                    ? min((float) ($data['amountPaid'] ?? 0), $totalAmount)
+                    : $totalAmount;
+                if ($isDebt && ($totalAmount <= 0 || $amountPaid >= $totalAmount)) {
+                    throw ValidationException::withMessages([
+                        'amountPaid' => ['A debt sale must have an unpaid balance.'],
+                    ]);
+                }
+                $paymentStatus = $amountPaid <= 0
+                    ? 'PENDING'
+                    : ($amountPaid >= $totalAmount ? 'PAID' : 'PARTIAL');
 
                 $sale = Sale::query()->create([
                     'saleNumber' => $data['saleNumber'] ?? null,
-                    'customerName' => $data['customerName'] ?? $data['recipientName'] ?? null,
+                    'customerName' => $data['customerName'] ?? null,
                     'paymentStatus' => $paymentStatus,
                     'paymentMethod' => $data['paymentMethod'] ?? 'CASH',
                     'totalAmount' => $totalAmount,
@@ -103,9 +120,23 @@ class OutgoingStockService
                         'subtotal' => $saleItem['subtotal'],
                     ]);
                 }
+
+                if ($isDebt && $amountPaid < $totalAmount) {
+                    $this->receivableService->store([
+                        'saleId' => $sale->id,
+                        'customerName' => $data['customerName'],
+                        'customerPhone' => $data['customerPhone'] ?? null,
+                        'referenceNumber' => $data['saleNumber'] ?? null,
+                        'totalAmount' => $totalAmount,
+                        'amountPaid' => $amountPaid,
+                        'debtDate' => $sale->soldAt->toDateString(),
+                        'dueDate' => $data['debtDueDate'] ?? null,
+                        'notes' => $data['notes'] ?? null,
+                    ], $user);
+                }
             }
 
-            return $outgoingStock->fresh(['user', 'items.part', 'sale']);
+            return $outgoingStock->fresh(['user', 'items.part', 'sale.receivable']);
         });
     }
 

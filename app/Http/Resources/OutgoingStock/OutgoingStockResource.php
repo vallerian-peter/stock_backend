@@ -36,6 +36,7 @@ class OutgoingStockResource extends JsonResource
                 'paymentMethod' => $this->sale->paymentMethod,
                 'totalAmount' => (string) $this->sale->totalAmount,
                 'amountPaid' => (string) $this->sale->amountPaid,
+                'receivableId' => $this->sale->receivable?->id,
             ] : null,
         ];
     }

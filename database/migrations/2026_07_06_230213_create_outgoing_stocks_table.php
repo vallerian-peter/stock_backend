@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('dispatchNumber')->nullable();
             $table->string('recipientName')->nullable();
-            $table->string('purpose'); // 'SALE', 'TECHNICIAN', 'DAMAGED', 'RETURN', 'TRANSFER'
+            $table->string('purpose'); // 'SALE', 'DAMAGED', 'RETURN'
             $table->foreignId('dispatchedBy')->nullable()->constrained('users')->nullOnDelete();
             $table->dateTime('dispatchedAt');
             $table->text('notes')->nullable();

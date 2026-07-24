@@ -15,10 +15,14 @@ class StoreSaleRequest extends FormRequest
     {
         return [
             'saleNumber' => ['nullable', 'string', 'max:255'],
-            'customerName' => ['nullable', 'string', 'max:255'],
+            'isDebt' => ['sometimes', 'boolean'],
+            'customerName' => ['nullable', 'required_if:isDebt,true', 'string', 'max:255'],
+            'customerPhone' => ['nullable', 'required_if:isDebt,true', 'string', 'max:50'],
+            'debtDueDate' => ['nullable', 'date'],
             'paymentStatus' => ['required', 'string', 'in:PAID,PENDING,PARTIAL,paid,pending,partial'],
-            'paymentMethod' => ['required', 'string', 'in:CASH,M-PESA,BANK,cash,m-pesa,bank'],
+            'paymentMethod' => ['required', 'string', 'in:CASH,MOBILE_MONEY,BANK_TRANSFER'],
             'amountPaid' => ['nullable', 'numeric', 'min:0'],
+            'additionalAmount' => ['nullable', 'numeric', 'min:0'],
             'soldAt' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],

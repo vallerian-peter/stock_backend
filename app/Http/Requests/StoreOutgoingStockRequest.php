@@ -18,8 +18,7 @@ class StoreOutgoingStockRequest extends FormRequest
 
         return [
             'dispatchNumber' => ['nullable', 'string', 'max:255'],
-            'recipientName' => ['nullable', 'string', 'max:255'],
-            'purpose' => ['required', 'string', 'in:SALE,technician,damaged,return,transfer,technician_use,internal_use,damaged_goods,return_to_supplier,branch_transfer,Sale,Sale,sale,TECHNICIAN,DAMAGED,RETURN,TRANSFER'],
+            'purpose' => ['required', 'string', 'in:SALE,DAMAGED,RETURN'],
             'dispatchedAt' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],
@@ -27,9 +26,15 @@ class StoreOutgoingStockRequest extends FormRequest
             'items.*.quantity' => ['required', 'integer', 'min:1'],
             
             // Sales fields validated conditionally
+            'saleNumber' => ['nullable', 'string', 'max:255'],
+            'isDebt' => ['sometimes', 'boolean'],
+            'customerName' => ['nullable', 'required_if:isDebt,true', 'string', 'max:255'],
+            'customerPhone' => ['nullable', 'required_if:isDebt,true', 'string', 'max:50'],
+            'debtDueDate' => ['nullable', 'date'],
             'paymentStatus' => [Rule::requiredIf($isSale), 'string', 'in:PAID,PENDING,PARTIAL,paid,pending,partial'],
-            'paymentMethod' => [Rule::requiredIf($isSale), 'string', 'in:CASH,M-PESA,BANK,cash,m-pesa,bank'],
+            'paymentMethod' => [Rule::requiredIf($isSale), 'string', 'in:CASH,MOBILE_MONEY,BANK_TRANSFER'],
             'amountPaid' => ['nullable', 'numeric', 'min:0'],
+            'additionalAmount' => ['nullable', 'numeric', 'min:0'],
             'items.*.unitPrice' => [Rule::requiredIf($isSale), 'nullable', 'numeric', 'min:0'],
         ];
     }

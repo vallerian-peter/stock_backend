@@ -19,6 +19,7 @@ class IncomingStockResource extends JsonResource
             'totalAmount' => (string) $this->totalAmount,
             'notes' => $this->notes,
             'createdAt' => $this->created_at?->toIso8601String(),
+            'payableId' => $this->payable?->id,
             'items' => $this->items->map(function ($item) {
                 return [
                     'id' => $item->id,

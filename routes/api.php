@@ -1,14 +1,17 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AlertNotificationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
-use App\Http\Controllers\Api\V1\PartController;
-use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\DashboardSummaryController;
 use App\Http\Controllers\Api\V1\IncomingStockController;
 use App\Http\Controllers\Api\V1\OutgoingStockController;
+use App\Http\Controllers\Api\V1\PartController;
+use App\Http\Controllers\Api\V1\PayableController;
+use App\Http\Controllers\Api\V1\ReceivableController;
 use App\Http\Controllers\Api\V1\SaleController;
+use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
-
 
 Route::group(['prefix' => 'v1'], function () {
     // require base_path('routes/api/v1.php');
@@ -19,6 +22,7 @@ Route::group(['prefix' => 'v1'], function () {
     // protected routes
     Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
+        Route::get('/dashboard/summary', DashboardSummaryController::class);
 
         // users
         Route::get('/users', [UserController::class, 'index'])->name('users.get.all');
@@ -46,5 +50,16 @@ Route::group(['prefix' => 'v1'], function () {
 
         // sales
         Route::apiResource('sales', SaleController::class)->only(['index', 'store', 'destroy']);
+
+        // debts
+        Route::apiResource('payables', PayableController::class)->only(['index', 'store', 'destroy']);
+        Route::apiResource('receivables', ReceivableController::class)->only(['index', 'store', 'destroy']);
+
+        // notifications
+        Route::get('/notifications', [AlertNotificationController::class, 'index']);
+        Route::post('/notifications/read-all', [AlertNotificationController::class, 'readAll']);
+        Route::delete('/notifications', [AlertNotificationController::class, 'destroyAll']);
+        Route::post('/notifications/{notification}/read', [AlertNotificationController::class, 'read']);
+        Route::delete('/notifications/{notification}', [AlertNotificationController::class, 'destroy']);
     });
 });

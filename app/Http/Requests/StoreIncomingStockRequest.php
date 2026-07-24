@@ -15,7 +15,11 @@ class StoreIncomingStockRequest extends FormRequest
     {
         return [
             'invoiceNumber' => ['nullable', 'string', 'max:255'],
-            'supplierName' => ['nullable', 'string', 'max:255'],
+            'isDebt' => ['sometimes', 'boolean'],
+            'supplierName' => ['nullable', 'required_if:isDebt,true', 'string', 'max:255'],
+            'supplierPhone' => ['nullable', 'required_if:isDebt,true', 'string', 'max:50'],
+            'debtDueDate' => ['nullable', 'date'],
+            'amountPaid' => ['nullable', 'numeric', 'min:0'],
             'receivedAt' => ['required', 'date'],
             'notes' => ['nullable', 'string'],
             'items' => ['required', 'array', 'min:1'],

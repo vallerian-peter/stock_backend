@@ -1,12 +1,21 @@
 <?php
 
 return [
+    'after_or_equal' => 'Sehemu ya :attribute lazima iwe tarehe sawa na au baada ya :date.',
+    'boolean' => 'Sehemu ya :attribute lazima iwe ndiyo au hapana.',
     'confirmed' => 'Uthibitisho wa :attribute haulingani.',
+    'date' => 'Sehemu ya :attribute lazima iwe tarehe sahihi.',
     'email' => ':attribute lazima iwe anwani sahihi ya barua pepe.',
     'enum' => ':attribute uliyochagua si sahihi.',
     'exists' => ':attribute uliyochagua si sahihi.',
     'image'    => 'Sehemu ya :attribute lazima iwe picha (JPEG, PNG, GIF, au WebP).',
     'integer'  => 'Sehemu ya :attribute lazima iwe namba kamili.',
+    'gt' => [
+        'numeric' => 'Sehemu ya :attribute lazima iwe zaidi ya :value.',
+    ],
+    'lte' => [
+        'numeric' => 'Sehemu ya :attribute lazima iwe sawa na au chini ya :value.',
+    ],
     'max' => [
         'file'    => 'Sehemu ya :attribute isizidi KB :max.',
         'numeric' => 'Sehemu ya :attribute isizidi :max.',
@@ -35,5 +44,13 @@ return [
         'image' => 'picha ya spea',
         'categoryId' => 'kundi',
         'name' => 'jina',
+        'customerName' => 'jina la mteja',
+        'supplierName' => 'jina la msambazaji',
+        'creditorName' => 'jina la mdai',
+        'creditorPhone' => 'simu ya mdai',
+        'totalAmount' => 'jumla ya kiasi',
+        'amountPaid' => 'kiasi kilicholipwa',
+        'debtDate' => 'tarehe ya deni',
+        'dueDate' => 'tarehe ya mwisho',
     ],
 ];

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('saleNumber')->nullable();
             $table->string('customerName')->nullable();
             $table->string('paymentStatus'); // 'PAID', 'PENDING', 'PARTIAL'
-            $table->string('paymentMethod')->nullable(); // 'CASH', 'M-PESA', 'BANK'
+            $table->string('paymentMethod')->nullable(); // 'CASH', 'MOBILE_MONEY', 'BANK_TRANSFER'
             $table->decimal('totalAmount', 12, 2)->default(0);
             $table->decimal('amountPaid', 12, 2)->default(0);
             $table->foreignId('soldBy')->nullable()->constrained('users')->nullOnDelete();

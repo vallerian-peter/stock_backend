@@ -9,13 +9,18 @@ use App\Models\Part;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class IncomingStockService
 {
+    public function __construct(private readonly PayableService $payableService)
+    {
+    }
+
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return IncomingStock::query()
-            ->with(['user', 'items.part'])
+            ->with(['user', 'items.part', 'payable'])
             ->latest()
             ->paginate($perPage);
     }
@@ -65,7 +70,27 @@ class IncomingStockService
 
             $incomingStock->update(['totalAmount' => $totalAmount]);
 
-            return $incomingStock->fresh(['user', 'items.part']);
+            if ($data['isDebt'] ?? false) {
+                if ($totalAmount <= 0 || (float) ($data['amountPaid'] ?? 0) >= $totalAmount) {
+                    throw ValidationException::withMessages([
+                        'amountPaid' => ['A debt intake must have an unpaid balance.'],
+                    ]);
+                }
+
+                $this->payableService->store([
+                    'incomingStockId' => $incomingStock->id,
+                    'creditorName' => $data['supplierName'],
+                    'creditorPhone' => $data['supplierPhone'] ?? null,
+                    'referenceNumber' => $data['invoiceNumber'] ?? null,
+                    'totalAmount' => $totalAmount,
+                    'amountPaid' => $data['amountPaid'] ?? 0,
+                    'debtDate' => $incomingStock->receivedAt->toDateString(),
+                    'dueDate' => $data['debtDueDate'] ?? null,
+                    'notes' => $data['notes'] ?? null,
+                ], $user);
+            }
+
+            return $incomingStock->fresh(['user', 'items.part', 'payable']);
         });
     }
 

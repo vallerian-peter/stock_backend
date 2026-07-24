@@ -19,7 +19,7 @@ class SaleService
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return Sale::query()
-            ->with(['user', 'items.part', 'outgoingStock'])
+            ->with(['user', 'items.part', 'outgoingStock', 'receivable'])
             ->latest()
             ->paginate($perPage);
     }
@@ -30,7 +30,6 @@ class SaleService
             // Map Sale request to OutgoingStock payload
             $outgoingPayload = [
                 'dispatchNumber' => $data['saleNumber'] ?? null,
-                'recipientName' => $data['customerName'] ?? null,
                 'purpose' => 'SALE',
                 'dispatchedAt' => $data['soldAt'] ?? now(),
                 'notes' => $data['notes'] ?? null,
@@ -42,15 +41,19 @@ class SaleService
                     ];
                 }, $data['items']),
                 'customerName' => $data['customerName'] ?? null,
+                'customerPhone' => $data['customerPhone'] ?? null,
+                'isDebt' => $data['isDebt'] ?? false,
+                'debtDueDate' => $data['debtDueDate'] ?? null,
                 'paymentStatus' => $data['paymentStatus'] ?? 'PAID',
                 'paymentMethod' => $data['paymentMethod'] ?? 'CASH',
                 'amountPaid' => $data['amountPaid'] ?? null,
+                'additionalAmount' => $data['additionalAmount'] ?? 0,
                 'saleNumber' => $data['saleNumber'] ?? null,
             ];
 
             $outgoingStock = $this->outgoingStockService->store($outgoingPayload, $user);
 
-            return $outgoingStock->sale->fresh(['user', 'items.part']);
+            return $outgoingStock->sale->fresh(['user', 'items.part', 'receivable']);
         });
     }
 

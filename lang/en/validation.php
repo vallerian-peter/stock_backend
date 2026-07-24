@@ -1,12 +1,21 @@
 <?php
 
 return [
+    'after_or_equal' => 'The :attribute field must be a date after or equal to :date.',
+    'boolean' => 'The :attribute field must be true or false.',
     'confirmed' => 'The :attribute confirmation does not match.',
+    'date' => 'The :attribute field must be a valid date.',
     'email' => 'The :attribute field must be a valid email address.',
     'enum' => 'The selected :attribute is invalid.',
     'exists' => 'The selected :attribute is invalid.',
     'image'    => 'The :attribute field must be an image (JPEG, PNG, GIF, or WebP).',
     'integer'  => 'The :attribute field must be an integer.',
+    'gt' => [
+        'numeric' => 'The :attribute field must be greater than :value.',
+    ],
+    'lte' => [
+        'numeric' => 'The :attribute field must be less than or equal to :value.',
+    ],
     'max' => [
         'file'    => 'The :attribute field must not be greater than :max kilobytes.',
         'numeric' => 'The :attribute field must not be greater than :max.',
@@ -35,5 +44,13 @@ return [
         'image' => 'part image',
         'categoryId' => 'category',
         'name' => 'name',
+        'customerName' => 'customer name',
+        'supplierName' => 'supplier name',
+        'creditorName' => 'creditor name',
+        'creditorPhone' => 'creditor phone',
+        'totalAmount' => 'total amount',
+        'amountPaid' => 'amount paid',
+        'debtDate' => 'debt date',
+        'dueDate' => 'due date',
     ],
 ];
