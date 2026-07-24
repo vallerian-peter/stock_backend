@@ -21,12 +21,18 @@ class AlertNotificationService
 {
     public function syncFor(User $user): void
     {
-        $definitions = [
-            ...$this->stockDefinitions(),
-            ...$this->dailyTrendDefinitions($user),
-        ];
+        $preferences = $user->preference()->firstOrCreate()->refresh();
+        $definitions = [];
 
-        if ($user->role === UserRole::ADMIN) {
+        if ($preferences->lowStockAlerts) {
+            $definitions = [...$definitions, ...$this->stockDefinitions()];
+        }
+
+        if ($preferences->salesDigest) {
+            $definitions = [...$definitions, ...$this->dailyTrendDefinitions($user)];
+        }
+
+        if ($user->role === UserRole::ADMIN && $preferences->debtReminders) {
             $definitions = [
                 ...$definitions,
                 ...$this->debtDefinitions(),

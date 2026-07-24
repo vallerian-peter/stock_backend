@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Enums\PartStatus;
 use App\Models\IncomingStock;
 use App\Models\IncomingStockItem;
 use App\Models\Part;
@@ -13,9 +12,10 @@ use Illuminate\Validation\ValidationException;
 
 class IncomingStockService
 {
-    public function __construct(private readonly PayableService $payableService)
-    {
-    }
+    public function __construct(
+        private readonly PayableService $payableService,
+        private readonly InventorySettingsService $inventorySettings
+    ) {}
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
@@ -54,17 +54,11 @@ class IncomingStockService
                 // Update Part Stock
                 $part = Part::query()->findOrFail($item['partId']);
                 $newQty = $part->quantity + $item['quantity'];
-                
-                $status = PartStatus::IN_STOCK;
-                if ($newQty <= 0) {
-                    $status = PartStatus::OUT_OF_STOCK;
-                } elseif ($newQty <= 15) {
-                    $status = PartStatus::LOW_STOCK;
-                }
 
                 $part->update([
                     'quantity' => $newQty,
-                    'status' => $status,
+                    'status' => $this->inventorySettings
+                        ->statusForQuantity($newQty),
                 ]);
             }
 
@@ -100,18 +94,19 @@ class IncomingStockService
             foreach ($incomingStock->items as $item) {
                 $part = Part::query()->find($item->partId);
                 if ($part) {
-                    $newQty = max(0, $part->quantity - $item->quantity);
-                    
-                    $status = PartStatus::IN_STOCK;
-                    if ($newQty <= 0) {
-                        $status = PartStatus::OUT_OF_STOCK;
-                    } elseif ($newQty <= 15) {
-                        $status = PartStatus::LOW_STOCK;
+                    $settings = $this->inventorySettings->get();
+                    $newQty = $part->quantity - $item->quantity;
+
+                    if (! $settings->allowNegativeStock && $newQty < 0) {
+                        throw ValidationException::withMessages([
+                            'items' => [__('parts.insufficient_stock')],
+                        ]);
                     }
 
                     $part->update([
                         'quantity' => $newQty,
-                        'status' => $status,
+                        'status' => $this->inventorySettings
+                            ->statusForQuantity($newQty),
                     ]);
                 }
             }

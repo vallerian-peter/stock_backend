@@ -12,6 +12,10 @@ use Throwable;
 
 class PartService
 {
+    public function __construct(
+        private readonly InventorySettingsService $inventorySettings
+    ) {}
+
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
         return Part::query()
@@ -50,7 +54,8 @@ class PartService
                     'imageUrl' => $imagePath,
                     'imageLastModifiedAt' => $imagePath ? $imageLastModifiedAt : null,
                     'categoryId' => $data['categoryId'] ?? null,
-                    'status' => $data['status'],
+                    'status' => $this->inventorySettings
+                        ->statusForQuantity((int) $data['quantity']),
                 ]);
 
                 return $part->fresh('category');
@@ -73,7 +78,7 @@ class PartService
             && $incomingImageLastModifiedAt
             && $part->imageLastModifiedAt === $incomingImageLastModifiedAt;
         $previousImagePath = $part->imageUrl;
-        $nextImagePath = $image && !$hasSameImageTimestamp
+        $nextImagePath = $image && ! $hasSameImageTimestamp
             ? $this->storeImage($image, $incomingImageLastModifiedAt)
             : null;
 
@@ -91,7 +96,9 @@ class PartService
                     'categoryId' => array_key_exists('categoryId', $data)
                         ? $data['categoryId']
                         : $part->categoryId,
-                    'status' => $data['status'] ?? $part->status,
+                    'status' => $this->inventorySettings->statusForQuantity(
+                        (int) ($data['quantity'] ?? $part->quantity)
+                    ),
                 ]);
 
                 return $part->fresh('category');

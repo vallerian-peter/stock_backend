@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AccountController;
 use App\Http\Controllers\Api\V1\AlertNotificationController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CategoryController;
@@ -10,6 +11,8 @@ use App\Http\Controllers\Api\V1\PartController;
 use App\Http\Controllers\Api\V1\PayableController;
 use App\Http\Controllers\Api\V1\ReceivableController;
 use App\Http\Controllers\Api\V1\SaleController;
+use App\Http\Controllers\Api\V1\SettingsController;
+use App\Http\Controllers\Api\V1\SupportRequestController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +25,19 @@ Route::group(['prefix' => 'v1'], function () {
     // protected routes
     Route::group(['middleware' => ['auth:sanctum']], function () {
         Route::post('/logout', [AuthController::class, 'logout'])->name('user.logout');
+        Route::get('/account', [AccountController::class, 'show'])->name('account.show');
+        Route::patch('/account/profile', [AccountController::class, 'update'])->name('account.update');
+        Route::put('/account/password', [AccountController::class, 'changePassword'])->name('account.password');
+        Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
+        Route::get('/settings', [SettingsController::class, 'show'])->name('settings.show');
+        Route::patch('/settings/preferences', [SettingsController::class, 'updatePreferences'])
+            ->name('settings.preferences.update');
+        Route::patch('/settings/workspace', [SettingsController::class, 'updateWorkspace'])
+            ->name('settings.workspace.update');
+        Route::get('/support-requests', [SupportRequestController::class, 'index'])
+            ->name('support-requests.index');
+        Route::post('/support-requests', [SupportRequestController::class, 'store'])
+            ->name('support-requests.store');
         Route::get('/dashboard/summary', DashboardSummaryController::class);
 
         // users

@@ -2,12 +2,11 @@
 
 namespace App\Services;
 
-use App\Enums\PartStatus;
 use App\Models\OutgoingStock;
 use App\Models\OutgoingStockItem;
+use App\Models\Part;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use App\Models\Part;
 use App\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -15,9 +14,10 @@ use Illuminate\Validation\ValidationException;
 
 class OutgoingStockService
 {
-    public function __construct(private readonly ReceivableService $receivableService)
-    {
-    }
+    public function __construct(
+        private readonly ReceivableService $receivableService,
+        private readonly InventorySettingsService $inventorySettings
+    ) {}
 
     public function paginate(int $perPage = 15): LengthAwarePaginator
     {
@@ -40,26 +40,32 @@ class OutgoingStockService
             ]);
 
             foreach ($data['items'] as $item) {
+                $part = Part::query()
+                    ->lockForUpdate()
+                    ->findOrFail($item['partId']);
+                $settings = $this->inventorySettings->get();
+
+                if (
+                    ! $settings->allowNegativeStock
+                    && $item['quantity'] > $part->quantity
+                ) {
+                    throw ValidationException::withMessages([
+                        'items' => [__('parts.insufficient_stock')],
+                    ]);
+                }
+
                 OutgoingStockItem::query()->create([
                     'outgoingStockId' => $outgoingStock->id,
                     'partId' => $item['partId'],
                     'quantity' => $item['quantity'],
                 ]);
 
-                // Update Part Stock
-                $part = Part::query()->findOrFail($item['partId']);
-                $newQty = max(0, $part->quantity - $item['quantity']);
-                
-                $status = PartStatus::IN_STOCK;
-                if ($newQty <= 0) {
-                    $status = PartStatus::OUT_OF_STOCK;
-                } elseif ($newQty <= 15) {
-                    $status = PartStatus::LOW_STOCK;
-                }
+                $newQty = $part->quantity - $item['quantity'];
 
                 $part->update([
                     'quantity' => $newQty,
-                    'status' => $status,
+                    'status' => $this->inventorySettings
+                        ->statusForQuantity($newQty),
                 ]);
             }
 
@@ -147,17 +153,11 @@ class OutgoingStockService
                 $part = Part::query()->find($item->partId);
                 if ($part) {
                     $newQty = $part->quantity + $item->quantity;
-                    
-                    $status = PartStatus::IN_STOCK;
-                    if ($newQty <= 0) {
-                        $status = PartStatus::OUT_OF_STOCK;
-                    } elseif ($newQty <= 15) {
-                        $status = PartStatus::LOW_STOCK;
-                    }
 
                     $part->update([
                         'quantity' => $newQty,
-                        'status' => $status,
+                        'status' => $this->inventorySettings
+                            ->statusForQuantity($newQty),
                     ]);
                 }
             }
